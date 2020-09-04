@@ -1,0 +1,2 @@
+# kintoneManager
+Created with CodeSandbox

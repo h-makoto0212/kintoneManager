@@ -1,6 +1,7 @@
 /**
  * user, passが指定されれば、パスワード認証
  * 指定されなければ、APIトークン認証
+ * Basic認証を使用している場合はオプションを有効にする
  * appsは以下の形式
  * {
  *    // アプリケーション名はkintoneのデータに依存せず、GAS内のコードで取り扱う専用
@@ -15,7 +16,10 @@
  *       ...
  *    }
  * }
- *
+ */
+
+/**
+ * Initialize
  * @param {string} subdomain your subdomain (For kintone.com domains, you must state the FQDN such as "subdomain.kintone.com" )
  * @param {object} apps application information.
  * @param {string} user (optional) user name or encoded authentication information: base64("USER:PASS")
@@ -244,8 +248,8 @@ Content-Type:${file.getMimeType()}\r\n\r\n`;
   /**
    * Header Authentication Information
    * @param {object} app Application object
-   * @param {string} app.token Application's API token
-   * @param {boolean} app.basic Application's Uses Basic authentication
+   * @param {string} app.token (optional)Application's API token
+   * @param {boolean} app.basic (optional)Application's Uses Basic authentication
    * @returns {object}
    * @private
    */

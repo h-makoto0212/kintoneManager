@@ -8,7 +8,7 @@
  *    appid: 1,
  *       guestid: 2,
  *       name: "日報",
- *       token: "XXXXXXXXXXXXXX_YOUR_TOKEN_XXXXXXXXXXXXXX" // 省略化。トークン認証利用時に使用
+ *       token: "XXXXXXXXXXXXXX_YOUR_TOKEN_XXXXXXXXXXXXXX" // 省略可。トークン認証時に使用
  *       basic: false //省略可。Basic認証を利用している場合はtrue
  *    },
  *    YOUR_APP_NAME2: {
@@ -257,7 +257,7 @@ Content-Type:${file.getMimeType()}\r\n\r\n`;
     if (this.authorization && app.basic) {
       // Basic authentication
       return {
-        "Authorization": `Basic ${this.authorization}`
+        Authorization: `Basic ${this.authorization}`
       };
     }
     if (this.authorization) {

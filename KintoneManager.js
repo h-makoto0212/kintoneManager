@@ -6,31 +6,46 @@
  * {
  *    // アプリケーション名はkintoneのデータに依存せず、GAS内のコードで取り扱う専用
  *    YOUR_APP_NAME1: {
- *    appid: 1,
- *       guestid: 2,
- *       name: "日報",
- *       token: "XXXXXXXXXXXXXX_YOUR_TOKEN_XXXXXXXXXXXXXX" // 省略可。トークン認証時に使用
- *       basic: false //省略可。Basic認証を利用している場合はtrue
+ *      appid: 1,
+ *      guestid: 2,
+ *      name: "日報",
+ *      token: "XXXXXXXXXXXXXX_YOUR_TOKEN_XXXXXXXXXXXXXX" // 省略可。APIトークン認証時に使用
  *    },
  *    YOUR_APP_NAME2: {
  *       ...
  *    }
  * }
+ * basicは以下の形式(ドメイン共通で指定されている認証情報を入力)
+ * {
+ *   user: "example",
+ *   pass: "xxxxx"
+ * }
  */
 
 /**
  * Initialize
- * @param {string} subdomain your subdomain (For kintone.com domains, you must state the FQDN such as "subdomain.kintone.com" )
- * @param {object} apps application information.
- * @param {string} user (optional) user name or encoded authentication information: base64("USER:PASS")
- * @param {string} pass (optional) password
+ * @param {string} subdomain your subdomain (For kintone.com domains,
+ *   you must state the FQDN such as "subdomain.kintone.com" )
+ * @param {object} apps list of Applications
+ * @param {object} apps.app application information
+ * @param {number} apps.app.appid application ID
+ * @param {string} apps.app.name application name
+ * @param {number} [apps.app.guestid] Guest id if you are a guest account.
+ * @param {string} [apps.app.token] accessible API tokens ex) "API_TOKEN1,API_TOKEN2"
+ * @param {string} [user] user name or encoded authentication information: base64("USER:PASS")
+ * @param {string} [pass] password
+ * @param {object} [basic] user and pass required for basic authentication
+ * @param {string} [basic.user] authentication fragment
+ * @param {string} [basic.pass] authentication fragment
  * @constructor
  */
 class KintoneManager {
-  constructor(subdomain, apps, user, pass) {
+  constructor(subdomain, apps, user, pass, basic) {
     this.subdomain = subdomain;
     this.authorization = null;
     this.apps = apps;
+    this.basic =
+      !!basic && Utilities.base64Encode(`${basic.user}:${basic.pass}`);
 
     if (arguments.length > 3) {
       this.authorization = Utilities.base64Encode(`${user}:${pass}`);
@@ -228,7 +243,7 @@ Content-Type:${file.getMimeType()}\r\n\r\n`;
 
   /**
    * Gets Endpoint
-   * @param {string} guest_id (optional) Guest id if you are a guest account.
+   * @param {string} [guest_id] (optional) Guest id if you are a guest account.
    * @returns {string} Endpoint url
    * @private
    */
@@ -249,32 +264,28 @@ Content-Type:${file.getMimeType()}\r\n\r\n`;
    * Header Authentication Information
    * @param {object} app Application object
    * @param {string} app.token (optional)Application's API token
-   * @param {boolean} app.basic (optional)Application's Uses Basic authentication
-   * @returns {object}
+   * @returns {object} Authentication Information
+   * @throws {Exception} Authentication is null
    * @private
    */
-  _authorizationHeader(app) {
-    if (!(this.authorization || app.token)) {
+  _authorizationHeader({ token }) {
+    if (!(this.authorization || token)) {
       throw new Error("Authentication Failed");
     }
 
-    if (this.authorization && app.basic) {
-      // Basic authentication
-      return {
-        Authorization: `Basic ${this.authorization}`
-      };
-    }
+    const _auth = {};
     if (this.authorization) {
       // Password authentication
-      return {
-        "X-Cybozu-Authorization": this.authorization
-      };
+      _auth["X-Cybozu-Authorization"] = this.authorization;
     }
-    if (app.token) {
+    if (this.authorization && this.basic) {
+      // Basic authentication
+      _auth["Authorization"] = `Basic ${this.basic}`;
+    }
+    if (token) {
       // API token authentication
-      return {
-        "X-Cybozu-API-Token": app.token
-      };
+      _auth["X-Cybozu-API-Token"] = token;
     }
+    return _auth;
   }
 }

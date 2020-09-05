@@ -41,7 +41,7 @@ class KintoneManager {
   }
 
   /**
-   * Constructor
+   * Records registration
    * @param {string} app_name Application name
    * @param {Array} records Kintone record objects ref) https://developer.cybozu.io/hc/ja/articles/201941784
    * @returns {HTTPResponse} ref) https://developers.google.com/apps-script/reference/url-fetch/http-response
@@ -105,10 +105,10 @@ class KintoneManager {
    */
   destroy(app_name, record_ids) {
     const app = this.apps[app_name];
-    let query = `app=${app.appid}`;
-    record_ids.forEach((record_id, index) => {
-      query += "&ids[@1]=@2".replace(/@1/g, index).replace(/@2/g, record_id);
-    });
+    const query = record_ids.reduce((prev, current, index) => {
+      return prev + "&ids[@1]=@2".replace(/@1/g, index).replace(/@2/g, current);
+    }, `app=${app.appid}`);
+
     const response = UrlFetchApp.fetch(
       "@1/records.json?@2"
         .replace(/@1/g, this._getEndpoint(app.guestid))
@@ -221,7 +221,7 @@ Content-Type:${file.getMimeType()}\r\n\r\n`;
       method: "post",
       contentType: `multipart/form-data; boundary=${boundary}`,
       headers: this._authorizationHeader(app),
-      payload: payload
+      payload
     };
     return option;
   }
